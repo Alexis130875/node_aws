@@ -147,8 +147,8 @@ const getNotificationInfo = async(page) => {
 				var ir2 = document.getElementsByClassName('notify-box notify-box-release')[0];
 				var isSoldout = [iso1, iso2];
 				var isRelease = [ir1, ir2];
-				console.log(isSoldout);
-				console.log(isRelease);
+				//console.log(isSoldout);
+				//console.log(isRelease);
 				var state1 = true
 				var state2 = true
 				for (i in isSoldout){
@@ -330,7 +330,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 								await page.goto('https://www.innvictus.com/p/'+model)
 								var getNI = await getNotificationInfo(page)
 								const url = await page.url()
-								console.log(getNI)
+								//console.log(getNI)
 								if (getNI != true){
 									var title = String(getNI[0]);
 									var price = String(getNI[1]);
@@ -389,7 +389,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 			browser.close()
 		   }
 		catch{
-			   continue
+			console.log('Continuing.......................')
 		}
 	}
 })();
