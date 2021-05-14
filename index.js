@@ -10,9 +10,10 @@ const { Webhook, MessageBuilder } = require('discord-webhook-node');
 
 const launchBrowser = async (_headless = false) => {
     return await new Promise(async resolve => {
-    	var browser = await puppeteer.launch({headless: _headless,
-					     executablePath: '/usr/bin/chromium-browser',
-					     args: ['--no-sandbox']});
+    	var browser = await puppeteer.launch({headless: _headless//,
+					     //executablePath: '/usr/bin/chromium-browser',
+					     //args: ['--no-sandbox']
+					 });
     	var page = await browser.newPage();
     	resolve([browser, page])
     })
@@ -87,21 +88,21 @@ var writeOnFile = async(data, overwrite = false) => {
 		try{
 			if (overwrite){
 				console.log('Overwriting......................')
-				fs.writeFile ("oldsItems.json", JSON.stringify(data), function(err) {
+				fs.writeFile ("./oldsItems.json", JSON.stringify(data), function(err) {
 			    if (err) throw err;
 			    resolve(true);
 				 })
 			}
 			else{
-				if(fs.existsSync('oldsItems.json')){
-					fs.appendFile('oldsItems.json', JSON.stringify(data), function (err) {
+				if(fs.existsSync('./oldsItems.json')){
+					fs.appendFile('./oldsItems.json', JSON.stringify(data), function (err) {
 					  if (err) throw err;
 					  resolve(true);
 					});
 				}
 				else{
 					console.log('Writing..........................')
-					fs.writeFile ("oldsItems.json", JSON.stringify(data), function(err) {
+					fs.writeFile ("./oldsItems.json", JSON.stringify(data), function(err) {
 				    if (err) throw err;
 				    resolve(true);
 					    }
@@ -117,7 +118,7 @@ var writeOnFile = async(data, overwrite = false) => {
 
 var readFile = async() => { 
 	return await new Promise(async resolve => {
-		fs.readFile('oldsItems.json', 'utf8', function(err, data) {
+		fs.readFile('./oldsItems.json', 'utf8', function(err, data) {
 		    if (err) throw err;
 		    const array = JSON.parse(data);
 		    resolve(array)
@@ -127,12 +128,16 @@ var readFile = async() => {
 
 var deleteFile = async() => { 
 	return await new Promise(async resolve => {
-		fs.unlink('oldsItems.json', function(err) {
+		fs.unlink('./oldsItems.json', function(err) {
 		    if (err) throw err;
 		    console.log('Deleting.........................')
 		    resolve(true)
 		})
 	})
+};
+
+var sleep = async() => { 
+	return await new Promise(async resolve => {resolve(true)})
 };
 
 
@@ -278,10 +283,10 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 
 (async () => {
 	console.log('------------------------------------------------')
-	await sendWeebhok('', '', '', '', '', '', '', false, true, false, false)
+	//await sendWeebhok('', '', '', '', '', '', '', false, true, false, false)
 	try{
 		var ini = Date.now()
-		var browpage = await launchBrowser(true);
+		var browpage = await launchBrowser(false);
 		var browser = browpage[0]
 		var page = browpage[1]
 		var url = 'https://www.innvictus.com/tenis-para-hombre/c/100010002000000000?q=%3Anewest%3Abrand%3AJ00000000000000000%3Abrand%3A100000690000000000'
@@ -295,6 +300,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 		for (i = 0; i < pages; i++){
 			url_ = String(url+'&page='+i);
 			await page.goto(url_)
+			await setTimeout(sleep, 200);
 			var items = await getCurrentPageItems(page)
 			current.push(items)
 			}
@@ -303,7 +309,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 		var tt = end - ini;
 		var ct = 0;
 		console.log('Taked time---------------'+String(tt))
-		if(fs.existsSync('oldsItems.json')){
+		if(fs.existsSync('./oldsItems.json')){
 			console.log('Comparing........................')
 			var data = await readFile();
 			for (i = 0; i < data.length; i++){
@@ -393,4 +399,3 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 		}
 	}
 })();
-
