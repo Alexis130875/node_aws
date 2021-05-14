@@ -10,7 +10,9 @@ const { Webhook, MessageBuilder } = require('discord-webhook-node');
 
 const launchBrowser = async (_headless = false) => {
     return await new Promise(async resolve => {
-    	var browser = await puppeteer.launch({headless: _headless});
+    	var browser = await puppeteer.launch({headless: _headless,
+					     executablePath: '/usr/bin/chromium-browser',
+					     args: ['--no-sandbox]});
     	var page = await browser.newPage();
     	resolve([browser, page])
     })
