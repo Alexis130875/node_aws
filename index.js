@@ -385,9 +385,12 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 	catch{
 		await sendWeebhok('Error', '', '', '', '', '', '', false, false, true, false)
 		console.log('Not Succeed......................')
-		try{browser.close()
-		   }cathc{
-			   continue}
+		try{
+			browser.close()
+		   }
+		catch{
+			   continue
+		}
 	}
 })();
 
