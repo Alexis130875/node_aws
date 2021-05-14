@@ -10,9 +10,9 @@ const { Webhook, MessageBuilder } = require('discord-webhook-node');
 
 const launchBrowser = async (_headless = false) => {
     return await new Promise(async resolve => {
-    	var browser = await puppeteer.launch({headless: _headless//,
-					     //executablePath: '/usr/bin/chromium-browser',
-					     //args: ['--no-sandbox']
+    	var browser = await puppeteer.launch({headless: _headless,
+					     executablePath: '/usr/bin/chromium-browser',
+					     args: ['--no-sandbox']
 					 });
     	var page = await browser.newPage();
     	resolve([browser, page])
@@ -286,7 +286,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 	//await sendWeebhok('', '', '', '', '', '', '', false, true, false, false)
 	try{
 		var ini = Date.now()
-		var browpage = await launchBrowser(false);
+		var browpage = await launchBrowser(true);
 		var browser = browpage[0]
 		var page = browpage[1]
 		var url = 'https://www.innvictus.com/tenis-para-hombre/c/100010002000000000?q=%3Anewest%3Abrand%3AJ00000000000000000%3Abrand%3A100000690000000000'
@@ -307,6 +307,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 		//browpage[0].close();
 		var end = Date.now();
 		var tt = end - ini;
+		var toNotify = []
 		var ct = 0;
 		console.log('Taked time---------------'+String(tt))
 		if(fs.existsSync('./oldsItems.json')){
@@ -327,41 +328,74 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 						var flag = true;
 					}
 					if (flag){
-						try{
-							if (ct < 5){
-								//var browpage = await launchBrowser(false);
-								//var page = browpage[1]
-								var curr_goto = JSON.parse(curr);
-								var model = String(curr_goto['code']);
-								await page.goto('https://www.innvictus.com/p/'+model)
-								var getNI = await getNotificationInfo(page)
-								const url = await page.url()
-								//console.log(getNI)
-								if (getNI != true){
-									var title = String(getNI[0]);
-									var price = String(getNI[1]);
-									var image_url = String(getNI[2]);
-									var on_stock = String(getNI[3]);
-									var status = await sendWeebhok('Notification', title, url, price, model, image_url, on_stock, true, false, false, false)
-									if (status) {
-										console.log('Notification succeed.............')
-									}
-							}
-							flag = false
-							}
-							else{
-								flag1 = true
-								break
-							}	
-						}
-						catch(err){
-							console.log('Notification not succeed.........')
-							flag = false
-							browpage[0].close()	
-						}	
+						toNotify.push(curr)
+						flag = false
 					}
+						/*if (flag){
+							try{
+								if (ct < 5){
+									//var browpage = await launchBrowser(false);
+									//var page = browpage[1]
+									var curr_goto = JSON.parse(curr);
+									var model = String(curr_goto['code']);
+									await page.goto('https://www.innvictus.com/p/'+model)
+									var getNI = await getNotificationInfo(page)
+									const url = await page.url()
+									//console.log(getNI)
+									if (getNI != true){
+										var title = String(getNI[0]);
+										var price = String(getNI[1]);
+										var image_url = String(getNI[2]);
+										var on_stock = String(getNI[3]);
+										var status = await sendWeebhok('Notification', title, url, price, model, image_url, on_stock, true, false, false, false)
+										if (status) {
+											console.log('Notification succeed.............')
+										}
+								}
+								flag = false
+								}
+								else{
+									flag1 = true
+									break
+								}	
+							}
+							catch(err){
+								console.log('Notification not succeed.........')
+								flag = false
+								browpage[0].close()	
+							}	
+						}*/
 				}
 		 	}
+		 	if (toNotify.length < 4){ 
+			 	for (i = 0; i < toNotify.length; i++){
+			 		try{
+			 			var curr_goto = JSON.parse(toNotify[i]);
+						var model = String(curr_goto['code']);
+						await page.goto('https://www.innvictus.com/p/'+model)
+						var getNI = await getNotificationInfo(page)
+						const url = await page.url()
+						//console.log(getNI)
+						if (getNI != true){
+							var title = String(getNI[0]);
+							var price = String(getNI[1]);
+							var image_url = String(getNI[2]);
+							var on_stock = String(getNI[3]);
+							var status = await sendWeebhok('Notification', title, url, price, model, image_url, on_stock, true, false, false, false)
+							if (status) {
+								console.log('Notification succeed.............')
+							}
+						}
+					}
+					catch(err){
+						console.log('Notification not succeed.........')	
+					}	
+			 	}
+		 	}
+		 else{
+		 	flag1 = true
+		 	}
+		 browser.close()
 		 if (flag1 == false){
 			var state = await writeOnFile(current, true)
 			if (state == true){
