@@ -12,7 +12,7 @@ const launchBrowser = async (_headless = false) => {
     return await new Promise(async resolve => {
     	var browser = await puppeteer.launch({headless: _headless,
 					     executablePath: '/usr/bin/chromium-browser',
-					     args: ['--no-sandbox]});
+					     args: ['--no-sandbox']});
     	var page = await browser.newPage();
     	resolve([browser, page])
     })
@@ -135,35 +135,61 @@ var deleteFile = async() => {
 	})
 };
 
+
 const getNotificationInfo = async(page) => {
     return page.evaluate(async () => { 
         return await new Promise(resolve => {
         	function sleep() {return new Promise(resolve => {console.log('Timer')})}
 			try{
-				var title = document.getElementsByTagName('title')[0].text;
-				title = title.replace(/\n/g, '');
-				title = title.replace(/\t/g, '');
-	        	
-	        	var price = document.getElementById('currentPrice').textContent;
-	        	price = price.replace(/\n/g, '');
-	        	price = price.replace(/ /g, '');
-	        	
-	        	var img_url = document.getElementsByClassName('slick-slide slick-current slick-active')[0].getElementsByTagName('img')[0].src;
-			
-				var get_sizes = document.getElementsByClassName('product-size__option'); 
-				var on_stock = [];
-				for (var i = 0; i < get_sizes.length; i ++) { 
-					var get_class = get_sizes[i].getAttribute('class');  
-					var soldout = get_class.search('no-stock');
-					if (soldout != get_sizes[i]){
-						var current = get_sizes[i].text
-						current = current.replace(/\n\n\t/g, '');
-						current = current.replace(/ /g, '');
-						on_stock.push(current)
-					} 
+				var iso1 = document.getElementsByClassName('notify-box notify-box-soldout hidden')[0]; 
+				var iso2 = document.getElementsByClassName('notify-box notify-box-soldout')[0];
+				var ir1 = document.getElementsByClassName('notify-box notify-box-release hidden')[0]; 
+				var ir2 = document.getElementsByClassName('notify-box notify-box-release')[0];
+				var isSoldout = [iso1, iso2];
+				var isRelease = [ir1, ir2];
+				console.log(isSoldout);
+				console.log(isRelease);
+				var state1 = true
+				var state2 = true
+				for (i in isSoldout){
+					if (isSoldout[i] == undefined){
+						state1 = false
+					}
 				}
+				for (i in isRelease){
+					if (isRelease[i] == undefined){
+						state2 = false
+					}
+				}
+				if (state1 == true || state2 == true){
+					var title = document.getElementsByTagName('title')[0].text;
+					title = title.replace(/\n/g, '');
+					title = title.replace(/\t/g, '');
+		        	
+		        	var price = document.getElementById('currentPrice').textContent;
+		        	price = price.replace(/\n/g, '');
+		        	price = price.replace(/ /g, '');
+		        	
+		        	var img_url = document.getElementsByClassName('slick-slide slick-current slick-active')[0].getElementsByTagName('img')[0].src;
+				
+					var get_sizes = document.getElementsByClassName('product-size__option'); 
+					var on_stock = [];
+					for (var i = 0; i < get_sizes.length; i ++) { 
+						var get_class = get_sizes[i].getAttribute('class');  
+						var soldout = get_class.search('no-stock');
+						if (soldout == -1){
+							var current = get_sizes[i].text
+							current = current.replace(/\n\n\t/g, '');
+							current = current.replace(/ /g, '');
+							on_stock.push(current)
+						} 
+					}
 
-	        	resolve([title, price, img_url, on_stock])
+		        	resolve([title, price, img_url, on_stock])
+				}
+				else{
+					resolve(true)
+				}
 		}
 		catch(err){
 			console.log('The data from page was not loaded')
@@ -255,7 +281,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 	await sendWeebhok('', '', '', '', '', '', '', false, true, false, false)
 	try{
 		var ini = Date.now()
-		var browpage = await launchBrowser(true);
+		var browpage = await launchBrowser(false);
 		var page = browpage[1]
 		var url = 'https://www.innvictus.com/tenis-para-hombre/c/100010002000000000?q=%3Anewest%3Abrand%3AJ00000000000000000%3Abrand%3A100000690000000000'
 		await page.goto(url)
@@ -296,20 +322,23 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 					if (flag){
 						try{
 							if (ct < 5){
-							var browpage = await launchBrowser(true);
-							var page = browpage[1]
-							var curr_goto = JSON.parse(curr);
-							var model = String(curr_goto['code']);
-							await page.goto('https://www.innvictus.com/p/'+model)
-							var getNI = await getNotificationInfo(page)
-							const url = await page.url()
-							var title = String(getNI[0]);
-							var price = String(getNI[1]);
-							var image_url = String(getNI[2]);
-							var on_stock = String(getNI[3]);
-							var status = await sendWeebhok('Notification', title, url, price, model, image_url, on_stock, true, false, false, false)
-							if (status) {
-								console.log('Notification succeed.............')
+								var browpage = await launchBrowser(false);
+								var page = browpage[1]
+								var curr_goto = JSON.parse(curr);
+								var model = String(curr_goto['code']);
+								await page.goto('https://www.innvictus.com/p/'+model)
+								var getNI = await getNotificationInfo(page)
+								const url = await page.url()
+								console.log(getNI)
+								if (getNI != true){
+									var title = String(getNI[0]);
+									var price = String(getNI[1]);
+									var image_url = String(getNI[2]);
+									var on_stock = String(getNI[3]);
+									var status = await sendWeebhok('Notification', title, url, price, model, image_url, on_stock, true, false, false, false)
+									if (status) {
+										console.log('Notification succeed.............')
+									}
 							}
 							flag = false
 							browpage[0].close()
