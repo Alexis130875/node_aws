@@ -166,12 +166,12 @@ const getNotificationInfo = async(page) => {
 					title = title.replace(/\n/g, '');
 					title = title.replace(/\t/g, '');
 		        	
-		        	var price = document.getElementById('currentPrice').textContent;
-		        	price = price.replace(/\n/g, '');
-		        	price = price.replace(/ /g, '');
-		        	
-		        	var img_url = document.getElementsByClassName('slick-slide slick-current slick-active')[0].getElementsByTagName('img')[0].src;
-				
+					var price = document.getElementById('currentPrice').textContent;
+					price = price.replace(/\n/g, '');
+					price = price.replace(/ /g, '');
+
+					var img_url = document.getElementsByClassName('slick-slide slick-current slick-active')[0].getElementsByTagName('img')[0].src;
+
 					var get_sizes = document.getElementsByClassName('product-size__option'); 
 					var on_stock = [];
 					for (var i = 0; i < get_sizes.length; i ++) { 
@@ -281,7 +281,8 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 	await sendWeebhok('', '', '', '', '', '', '', false, true, false, false)
 	try{
 		var ini = Date.now()
-		var browpage = await launchBrowser(false);
+		var browpage = await launchBrowser(true);
+		var browser = browpage[0]
 		var page = browpage[1]
 		var url = 'https://www.innvictus.com/tenis-para-hombre/c/100010002000000000?q=%3Anewest%3Abrand%3AJ00000000000000000%3Abrand%3A100000690000000000'
 		await page.goto(url)
@@ -297,7 +298,7 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 			var items = await getCurrentPageItems(page)
 			current.push(items)
 			}
-		browpage[0].close();
+		//browpage[0].close();
 		var end = Date.now();
 		var tt = end - ini;
 		var ct = 0;
@@ -322,8 +323,8 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 					if (flag){
 						try{
 							if (ct < 5){
-								var browpage = await launchBrowser(false);
-								var page = browpage[1]
+								//var browpage = await launchBrowser(false);
+								//var page = browpage[1]
 								var curr_goto = JSON.parse(curr);
 								var model = String(curr_goto['code']);
 								await page.goto('https://www.innvictus.com/p/'+model)
@@ -341,7 +342,6 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 									}
 							}
 							flag = false
-							browpage[0].close()
 							}
 							else{
 								flag1 = true
@@ -380,10 +380,14 @@ const sendWeebhok = async (type, title, url, price, model, image_url, on_stock, 
 				console.log('Done.............................')
 			}
 		}
+		browser.close();
 	}
 	catch{
 		await sendWeebhok('Error', '', '', '', '', '', '', false, false, true, false)
 		console.log('Not Succeed......................')
+		try{browser.close()
+		   }cathc{
+			   continue}
 	}
 })();
 
